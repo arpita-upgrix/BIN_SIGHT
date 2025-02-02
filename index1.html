@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BinSight - Upload Dustbin Image</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Make html and body fill the full screen */
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Body Styling */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #fff; /* White background */
+            margin: 0; /* Remove default margin */
+        }
+
+        /* Main Container */
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 600px; /* Maximum width of the container */
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px; /* Rounded corners */
+            overflow: auto; /* Allows scrolling if content exceeds available space */
+        }
+
+        /* Header */
+        header h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Inputs and Buttons */
+        input[type="email"],
+        input[type="file"],
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input[type="email"], 
+        input[type="file"] {
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #218838;
+        }
+
+        /* Image Preview */
+        #preview {
+            width: 100%;
+            max-width: 300px;
+            margin-top: 10px;
+            display: block;
+            border-radius: 5px;
+        }
+
+        /* Hidden Class */
+        .hidden {
+            display: none;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Status Paragraphs */
+        p {
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BinSight</h1>
+        </header>
+
+        <!-- Login Form -->
+        <input type="email" id="user_email" placeholder="Enter your email">
+        <button onclick="loginUser()">Login</button>
+        <p id="login_status"></p>
+
+        <!-- Image Upload Section -->
+        <input type="file" id="image_upload" accept="image/*" onchange="previewImage(); getUserLocation();">
+        <img id="preview" class="hidden" />
+        <button onclick="analyzeAndUpload()">Analyze and Upload</button>
+        <p id="upload_status"></p>
+        <p id="location_status"></p>
+        <p id="coordinates"></p>
+        <p id="address"></p>
+
+        <footer>
+            <p>&copy; 2025 BinSight. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Function to preview uploaded image
+        function previewImage() {
+            const fileInput = document.getElementById("image_upload");
+            const preview = document.getElementById("preview");
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove("hidden"); // Show the image preview
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        // Function to get live browser location
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async function (position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        document.getElementById("location_status").innerText = "✅ Location detected successfully!";
+                        document.getElementById("coordinates").innerText = `📍 Latitude: ${latitude}, Longitude: ${longitude}`;
+
+                        try {
+                            // Fetching full address using OpenStreetMap API
+                            const response = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                            const address = response.data.address;
+                            const fullAddress = `${address.road || ''}, ${address.city || address.town || ''}, ${address.state || ''}, ${address.country || ''}`;
+                            document.getElementById("address").innerText = `📍 Address: ${fullAddress}`;
+                        } catch (error) {
+                            document.getElementById("address").innerText = "⚠️ Error fetching address details.";
+                        }
+                    },
+                    function (error) {
+                        document.getElementById("location_status").innerText = "⚠️ Error detecting location. Please enable GPS.";
+                    }
+                );
+            } else {
+                document.getElementById("location_status").innerText = "❌ Geolocation is not supported by this browser.";
+            }
+        }
+
+        // Function to handle login (dummy function)
+        function loginUser() {
+            const email = document.getElementById("user_email").value;
+            if (email) {
+                document.getElementById("login_status").innerText = `✅ Logged in as ${email}`;
+            } else {
+                document.getElementById("login_status").innerText = "⚠️ Please enter a valid email.";
+            }
+        }
+
+        // Function to analyze and upload image (dummy function)
+        function analyzeAndUpload() {
+            const fileInput = document.getElementById("image_upload").files[0];
+            if (!fileInput) {
+                document.getElementById("upload_status").innerText = "⚠️ Please upload an image first.";
+                return;
+            }
+            document.getElementById("upload_status").innerText = "✅ Image uploaded successfully!";
+        }
+    </script>
+</body>
+</html>
